@@ -1,8 +1,9 @@
 import { stripe } from "@/lib/stripe";
 import { Button } from "@material-tailwind/react";
+import axios from "axios";
 import { GetStaticPaths, GetStaticProps } from "next";
 import Image from "next/image";
-import { useRouter } from "next/router";
+import { useState } from "react";
 import Stripe from "stripe";
 
 interface ProductsProps {
@@ -17,9 +18,21 @@ interface ProductsProps {
 }
 
 export default function Product({ product }: ProductsProps) {
+  const [isLoading, setIsLoading] = useState(false)
 
-  function handleBuyProduct(){
-    
+  async function handleBuyProduct(){
+    try {
+      setIsLoading(true)
+      const response = await axios.post('/api/check-out', {
+        priceId: product.defaultPriceId
+      })
+
+      const { checkoutUrl } = response.data
+      window.location.href = checkoutUrl
+    } catch (error) {
+      setIsLoading(false)
+      alert('Falha ao redirecionar para o checkout !')
+    }
   }
 
   return (
@@ -35,6 +48,7 @@ export default function Product({ product }: ProductsProps) {
         <p className="mt-10 text-lg leading-[1.6] text-gray300">{product.description}</p>
 
         <Button
+          disabled={isLoading}
           onClick={handleBuyProduct}
           color="green"
           className="p-4 mt-auto bg-green500 border-0 font-bold">
